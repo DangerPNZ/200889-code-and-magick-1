@@ -1,78 +1,60 @@
 'use strict';
-window.renderStatistics = function () {
-  var canvas = document.querySelector('canvas');
-  var names = ['Вы', 'Алексей', 'Пётр', 'Николай'];
-  var times = [3979, 4532, 4117, 3456];
-  var ctx = canvas.getContext('2d');
-  var histoHeight = 150;
-  var histoWidth = 40;
-  var histoInterval = 50;
-  var histoStart = 200;
-  var corellate = [];
-  var winnerIndex;
-
-  var drawCloud = function () {
-    ctx.fillStyle = 'rgba(84, 231, 91, .5)';
-    // слева, сверху, вправо(ширина), вниз(высота)
-    ctx.fillRect(160, 10, 400, 200);
-
-    ctx.fillStyle = 'rgb(255, 255, 255)';
-    ctx.fillRect(150, 0, 400, 200);
+window.renderStatistics = function (ctx, names, times) {
+  var drawCloud = function (color, left, top, width, height) {
+    ctx.fillStyle = color;
+    ctx.fillRect(left, top, width, height);
   };
 
-  var writeText = function () {
-    ctx.fillStyle = '#000';
-    ctx.font = '16px PT Mono';
-    ctx.fillText('Ура, Вы победили!', 275, 30);
-    ctx.fillText('Список результатов:', 265, 50);
+  var writeText = function (text, left, top, fontAndSize, color) {
+    ctx.fillStyle = color;
+    ctx.font = fontAndSize;
+    ctx.fillText(text, left, top);
   };
 
-  var setHistoHeight = function () {
-    for (var i = 0; i < times.length; i++) {
-      corellate[i] = Math.floor(times[i] / 100 * 2);
-    }
-    return corellate;
-  };
+  var color = 'rgba(84, 231, 91, 0.5)';
+  var textColor = '#000';
+  var textFontAndSize = '16px PT Mono';
+  var textContent = 'Ура, Вы победили!';
 
-  var findWinner = function () {
-    for (var i = 1; i < times.length; i++) {
-      if (times[0] > times[i]) {
-        winnerIndex = i;
+  var getMaxValue = function (array) {
+    var max = array[0];
+    for (var j = 1; j < array.length; j++) {
+      if (max < array[j]) {
+        max = array[j];
       }
     }
-  };
-
-  var findYourResult = function () {
-    for (var i = 0; i < names.length - 1; i++) {
-      if (names[i] === 'Вы') {
-        var swap = names[winnerIndex];
-        names[winnerIndex] = names[i];
-        names[i] = swap;
-      }
-    }
+    return max;
   };
 
   var drawHisto = function () {
-    for (var i = 0; i < times.length; i++) {
-      findYourResult();
-      ctx.fillStyle = '#000';
-      ctx.font = '16px PT Mono';
-      ctx.fillText(names[i], histoStart, 170);
+    var maxHeight = 150;
+    var maxTime = getMaxValue(times);
+    var histoWidth = 40;
+    var histoInterval = 50;
+    var histoStart = 200;
+    var histoHeight;
+    var step = Math.floor(maxHeight / (maxTime / 1000));
 
-      if (i !== winnerIndex) {
+    for (var i = 0; i < times.length; i++) {
+      times[i] = Math.floor(times[i]);
+      histoHeight = (times[i] / 1000) * step;
+      writeText(names[i], histoStart, 240, textFontAndSize, textColor);
+      if (names[i] !== 'Вы') {
         ctx.fillStyle = 'rgba(0, 0, 255, ' + Math.random() * 1 + ')';
-        ctx.fillRect(histoStart, corellate[i], histoWidth, histoHeight - corellate[i]);
-        histoStart += (histoWidth + histoInterval);
       } else {
         ctx.fillStyle = 'rgb(255, 0, 0)';
-        ctx.fillRect(histoStart, corellate[i], histoWidth, histoHeight - corellate[i]);
       }
+      ctx.fillRect(histoStart, 70 - (histoHeight - maxHeight), histoWidth, histoHeight);
+      writeText(times[i], histoStart, 65 - (histoHeight - maxHeight), textFontAndSize, textColor);
+      histoStart += (histoWidth + histoInterval);
     }
   };
 
-  setHistoHeight();
-  drawCloud();
-  findWinner();
-  writeText();
+  drawCloud(color, 160, 10, 400, 250);
+  color = 'rgb(255, 255, 255)';
+  drawCloud(color, 150, 0, 400, 250);
+  writeText(textContent, 275, 30, textFontAndSize, textColor);
+  textContent = 'Список результатов:';
+  writeText(textContent, 265, 50, textFontAndSize, textColor);
   drawHisto();
 };
